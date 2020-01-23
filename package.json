@@ -1,0 +1,32 @@
+{
+  "name": "particlesystem",
+  "version": "0.0.1",
+  "description": "Physics based particle system library for typescript / javascript",
+  "main": "dist/particlesystems.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "build-demo": "webpack --config demo.webpack.config.js",
+    "build": "webpack",
+    "start": "webpack-dev-server --config demo.webpack.config.js"
+  },
+  "keywords": [
+    "particle",
+    "physics",
+    "graphics",
+    "gfx",
+    "effects",
+    "canvas"
+  ],
+  "author": "Niklas Andersson",
+  "license": "ISC",
+  "devDependencies": {
+    "nodemon": "^2.0.2",
+    "source-map-loader": "^0.2.4",
+    "ts-loader": "^6.2.1",
+    "ts-node": "^8.6.2",
+    "typescript": "^3.7.5",
+    "webpack": "^4.41.5",
+    "webpack-cli": "^3.3.10",
+    "webpack-dev-server": "^3.10.1"
+  }
+}
