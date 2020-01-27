@@ -46,14 +46,24 @@ class Entity
 
 class Particle extends Entity
 {
+  private lifetime:number;
+  public age:number;
+  public normalizedAge:number;
+
   constructor(options:ParticleOptions&ParticleFactories) {
     super(new Vec2(options.createPosition()), new Vec2(options.createVelocity()));
+    this.lifetime = options.createLifetime();
+    this.age = this.normalizedAge = 0;
   }
 
   update(forces:Vec2d<number>, dampening:number, dt:number) {
     this.velocity.addScaled(forces, dt);
     this.velocity.scale(dampening);
     this.pos.addScaled(this.velocity, dt);
+    this.age += dt;
+
+    this.normalizedAge = this.age / this.lifetime;
+    return this.age < this.lifetime;
   }
 }
 
@@ -65,14 +75,13 @@ type NumRange = {
 type ParticleFactories = {
   createPosition: () => Vec2d<number>
   createVelocity: () => Vec2d<number>
+  createLifetime: () => number
 };
 
 type ParticleOptions = { 
   initialPos: Vec2d<number|NumRange>|(() => Vec2d<number>); 
-  initialVelocity: Vec2d<number|NumRange>|(() => Vec2d<number>); 
-  view: { 
-    color?: Color; 
-  }
+  initialVelocity: Vec2d<number|NumRange>|(() => Vec2d<number>);
+  lifetime?: number|NumRange|(() => number);
 };
 
 type Vec2Dictionary = { [key:string]: Vec2d<number> };
@@ -83,6 +92,7 @@ type ParticleSystemOptions = {
   dampening?: number
 }
 
+const DefaultParticleLifetime = 3;
 const DefaultPSOptions:ParticleSystemOptions = {
   count: 20,
   forces: {
@@ -91,23 +101,25 @@ const DefaultPSOptions:ParticleSystemOptions = {
   dampening: .9,
   particle: {
     initialPos: { x: {min: -10, max: 10}, y: 0 },
-    initialVelocity: { x: 0, y: {max: -10, min: -100} },
-    view: {
-      color: "white"
-    }
+    initialVelocity: { x: 0, y: {max: -10, min: -100} }
   }
 }
 
-function random({min, max}:NumRange) { return min + Math.random()*(max-min) };
+export function random({min, max}:NumRange) { return min + Math.random()*(max-min) };
 
-function createValueFactory(key:"x"|"y", vec:Vec2d<number|NumRange>) {
-  if(typeof vec[key] === 'number') {
-    return function() { return vec[key] as number; }
+function createNumberFactory(param:number|NumRange) {
+  if(typeof param === 'number') {
+    return function() { return param as number; }
   }
   else {
-    return function() { return random(vec[key] as NumRange); }
+    return function() { return random(param as NumRange); }
   }    
 }
+
+function createValueFactory(key:"x"|"y", vec:Vec2d<number|NumRange>) {
+  return createNumberFactory(vec[key]);  
+}
+
 function createVec2dFactory(src:Vec2d<number|NumRange>):()=>Vec2d<number> {
   const xFactory = createValueFactory("x", src);
   const yFactory = createValueFactory("y", src);
@@ -133,6 +145,7 @@ export class ParticleSystem
     const factories:ParticleFactories = {
       createPosition: (typeof opts.particle.initialPos === 'function') ? opts.particle.initialPos : createVec2dFactory(opts.particle.initialPos),
       createVelocity: (typeof opts.particle.initialVelocity === 'function') ? opts.particle.initialVelocity : createVec2dFactory(opts.particle.initialVelocity),
+      createLifetime: (typeof opts.particle.lifetime === 'function') ? opts.particle.lifetime : createNumberFactory(opts.particle.lifetime || DefaultParticleLifetime)
     }
     const particleOptions = {...opts.particle, ...factories};
     
@@ -144,7 +157,10 @@ export class ParticleSystem
     for(const f in this.forces)
       forces.add(this.forces[f]);
 
-    for(const particle of this._particles)
-      particle.update(forces, this.dampening, dt);
+    const up = (p:Particle) => {
+      return p.update(forces, this.dampening, dt)
+    }
+
+    this._particles = this._particles.filter(up);
   }
 }
