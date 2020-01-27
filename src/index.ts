@@ -49,6 +49,7 @@ class Particle extends Entity
   private lifetime:number;
   public age:number;
   public normalizedAge:number;
+  public userData:any;
 
   constructor(options:ParticleOptions&ParticleFactories) {
     super(new Vec2(options.createPosition()), new Vec2(options.createVelocity()));
@@ -87,18 +88,22 @@ type ParticleOptions = {
 type Vec2Dictionary = { [key:string]: Vec2d<number> };
 type ParticleSystemOptions = {
   count: number;
+  position: Vec2d<number>;
   particle: ParticleOptions;
   forces:  Vec2Dictionary,
-  dampening?: number
+  dampening?: number,
+  onInit?: (ps:ParticleSystem) => void,
+  onUpdate?: (ps:ParticleSystem, dt:number) => void
 }
 
 const DefaultParticleLifetime = 3;
 const DefaultPSOptions:ParticleSystemOptions = {
   count: 20,
+  position: { x: 0, y: 0},
   forces: {
     //gravity: { x: 0, y: -9.8 }
   },
-  dampening: .9,
+  dampening: 1,
   particle: {
     initialPos: { x: {min: -10, max: 10}, y: 0 },
     initialVelocity: { x: 0, y: {max: -10, min: -100} }
@@ -106,6 +111,7 @@ const DefaultPSOptions:ParticleSystemOptions = {
 }
 
 export function random({min, max}:NumRange) { return min + Math.random()*(max-min) };
+export function randomize(values:any[]) { return values[Math.floor(Math.random()*values.length)] };
 
 function createNumberFactory(param:number|NumRange) {
   if(typeof param === 'number') {
@@ -134,13 +140,22 @@ export class ParticleSystem
   private _particles:Particle[];
   public get particles() { return this._particles; }
 
+  private _pos:Vec2d<number>;
+  public get pos() { return this._pos; }
+
+  private onUpdate: (ps:ParticleSystem, dt:number) => void;
+  private onInit: (ps:ParticleSystem) => void;
+
   private forces:Vec2Dictionary;
   private dampening:number;
 
   constructor(options:Partial<ParticleSystemOptions>) {
     const opts = {...DefaultPSOptions, ...options};
     this.forces = opts.forces;
+    this._pos = opts.position;
     this.dampening = opts.dampening || 1;
+    this.onUpdate = opts.onUpdate || (() => {});
+    this.onInit = opts.onInit || (() => {});
 
     const factories:ParticleFactories = {
       createPosition: (typeof opts.particle.initialPos === 'function') ? opts.particle.initialPos : createVec2dFactory(opts.particle.initialPos),
@@ -150,6 +165,27 @@ export class ParticleSystem
     const particleOptions = {...opts.particle, ...factories};
     
     this._particles = Array(opts.count).fill(null).map(_ => new Particle(particleOptions));
+
+  }
+
+  private lastTime: DOMHighResTimeStamp = 0;
+  private onStart = (time:DOMHighResTimeStamp) => {
+    this.lastTime = time;
+    this.onInit(this);
+    window.requestAnimationFrame(this.doUpdate);
+  }
+
+  public start() {
+    window.requestAnimationFrame(this.onStart);
+  }
+
+  private doUpdate = (time:DOMHighResTimeStamp) => {
+    const dt = (time - this.lastTime) / 1000;
+    this.lastTime = time;
+  
+    this.update(dt);
+    this.onUpdate(this, dt);
+    window.requestAnimationFrame(this.doUpdate);
   }
 
   public update(dt:number) {
