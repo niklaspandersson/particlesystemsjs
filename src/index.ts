@@ -3,6 +3,15 @@ type Vec2d<T> = {
   y:T;
 }
 
+function magnitude(value:Vec2d<number>) {
+  return Math.sqrt(value.x**2 + value.y**2)
+}
+function normalize(value:Vec2d<number>) {
+  const m = magnitude(value);
+  return { x: value.x/m, y: value.y/m }
+}
+
+
 type Color = string | { r: number, g: number, b: number } | number;
 
 class Vec2
@@ -122,6 +131,26 @@ function createNumberFactory(param:number|NumRange) {
   }    
 }
 
+export function createFactoryFromVector(vec:Vec2d<number>, spread:number, speedFactor:number) {
+  const mag = magnitude(vec);
+  const dir = normalize(vec);
+
+  let angle = dir.x !== 0 ? Math.atan(dir.y / dir.x) : 90;
+  if(dir.y < 0)
+    angle += Math.PI;
+
+  const minAngle = angle - spread/2;
+  const maxAngle = angle + spread/2;
+
+  const minMag = mag*speedFactor;
+
+  return function() {
+    const m = random({min: minMag, max: mag});
+    const a = random({min: minAngle, max: maxAngle});
+    return { x: Math.cos(a)*m, y: Math.sin(a)*m };
+  }
+}
+
 function createValueFactory(key:"x"|"y", vec:Vec2d<number|NumRange>) {
   return createNumberFactory(vec[key]);  
 }
@@ -166,12 +195,14 @@ export class ParticleSystem
     
     this._particles = Array(opts.count).fill(null).map(_ => new Particle(particleOptions));
 
+    this.doUpdate = this.doUpdate.bind(this);
   }
 
   private lastTime: DOMHighResTimeStamp = 0;
   private onStart = (time:DOMHighResTimeStamp) => {
     this.lastTime = time;
     this.onInit(this);
+    this._particles = this.particles.sort((p1,p2) => p1.userData.color.localeCompare(p2.userData.color));
     window.requestAnimationFrame(this.doUpdate);
   }
 
@@ -179,7 +210,7 @@ export class ParticleSystem
     window.requestAnimationFrame(this.onStart);
   }
 
-  private doUpdate = (time:DOMHighResTimeStamp) => {
+  private doUpdate(time:DOMHighResTimeStamp) {
     const dt = (time - this.lastTime) / 1000;
     this.lastTime = time;
   
@@ -189,12 +220,13 @@ export class ParticleSystem
   }
 
   public update(dt:number) {
+    const dampening = this.dampening;
     let forces = new Vec2();
     for(const f in this.forces)
       forces.add(this.forces[f]);
 
-    const up = (p:Particle) => {
-      return p.update(forces, this.dampening, dt)
+    const up = function(p:Particle) {
+      return p.update(forces, dampening, dt);
     }
 
     this._particles = this._particles.filter(up);

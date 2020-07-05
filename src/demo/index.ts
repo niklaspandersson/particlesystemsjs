@@ -1,26 +1,31 @@
-import {ParticleSystem, random, randomize } from "../index";
+import {ParticleSystem, random, randomize, createFactoryFromVector } from "../index";
 
 const scene = document.getElementById("scene") as HTMLCanvasElement;
 const Width = 12;
 const Height = 5;
 
-const test = new ParticleSystem({ 
-  count: 50,
-  position: {x: scene.width/2, y: scene.height/2},
-  forces: {
-    // gravity: {x: 0, y: 98},
-    wind: { x: -40, y: 0}
-  },
-  onInit: init,
-  onUpdate: draw,
-  particle: {
-    initialPos: {x: 0, y: 0},
-    initialVelocity: { x: {min: -50,max: 50}, y: {min: -50, max: 50}},
-    lifetime: {min: .3, max: 1.5}
-  }
+scene.addEventListener('click', ev => {
+  const test = new ParticleSystem({ 
+    count: 180,
+    dampening: .99,
+    position: {x: scene.width/2, y: scene.height/2},
+    forces: {
+      gravity: {x: 0, y: 98},
+      wind: { x: 20, y: 0}
+    },
+    onInit: init,
+    onUpdate: draw,
+    particle: {
+      initialPos: {x: 0, y: 0},
+      initialVelocity: createFactoryFromVector({x: -230, y: -120}, Math.PI/4, 0.3), //{ x: {min: -50,max: 50}, y: {min: -50, max: 50}},
+      lifetime: {min: .5, max: 4}
+    }
+  });
+  
+  test.start();
 });
 
-test.start();
+
 
 function init(ps:ParticleSystem) {
   for(const p of ps.particles) 
@@ -32,17 +37,25 @@ function init(ps:ParticleSystem) {
     };
 }
 
+let ctx = scene.getContext("2d")!;
+const halfWidth = Width/2;
+const halfHeight = Height/2;
+
 function draw(ps:ParticleSystem) {
   ///DRAWING
-  let ctx = scene.getContext("2d")!;
   ctx.clearRect(0,0,scene.width, scene.height);
-  for(const p of ps.particles) {
+  let lastColor = "";
+  ps.particles.forEach(function(p) {
+    if(p.userData.color !== lastColor) {
+      ctx.fillStyle = p.userData.color;
+      lastColor = p.userData.color;
+    }
+
     ctx.save();
-    ctx.fillStyle = p.userData.color;
     ctx.globalAlpha = 1-p.normalizedAge;
     ctx.translate(ps.pos.x + p.pos.x, ps.pos.y + p.pos.y);
-    ctx.rotate(p.userData.initialRotation + Math.PI*2*p.normalizedAge*p.userData.rotationSpeed*p.userData.rotationDirection)
-    ctx.fillRect(-Width/2, -Height/2, Width/2, Height/2);
+    ctx.rotate(p.userData.initialRotation + Math.PI*2*p.normalizedAge**2*p.userData.rotationSpeed*p.userData.rotationDirection)
+    ctx.fillRect(-halfWidth, -halfHeight, halfWidth, halfHeight);
     ctx.restore();
-  }
+  });
 }
