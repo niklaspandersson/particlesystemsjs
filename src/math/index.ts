@@ -44,3 +44,5 @@ export type NumRange = {
   min: number,
   max: number
 };
+
+export { gaussian } from "./random";
