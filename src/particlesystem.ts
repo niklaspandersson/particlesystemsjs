@@ -78,14 +78,18 @@ export class ParticleSystem<T>
     const dt = (time - this.lastTime) / 1000;
     this.lastTime = time;
 
-    const newParticles = this._emitter.onUpdate(dt);
+    const newParticles = this._emitter.isAlive && this._emitter.onUpdate(dt);
     if(newParticles) 
       this.particles.push(...newParticles);
   
     this.update(dt);
 
     this.draw(this, dt);
+
     this.animationFrameId = window.requestAnimationFrame(this.onAnimationFrame);
+    
+    if(!this._emitter.isAlive && !this.particles.length)
+      this.stop();
   }
 
   private updatePhysics(deltaTime:number) {

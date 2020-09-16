@@ -44,7 +44,7 @@ type ParticleUserData = {
   color: string
 }
 scene.addEventListener('click', ev => {
-  const test = new ParticleSystem<ParticleUserData>({ 
+  const test = new ParticleSystem({ 
     initialCount: 0,
     position: {x: ev.x, y: ev.y},
     forces: {
@@ -53,7 +53,9 @@ scene.addEventListener('click', ev => {
     },
     emitter: {
       particlesPerSecond: 30,
-      strategy: "random",
+      strategy: "sequence",
+      sequence: [0, .25, .5, 4],
+      lifetime: 5,
       particles: {
         //initialPos: {x: {min: -50, max: 50}, y: {min: -50, max: 50}},
         initialPos: {x: 0, y: 0},
