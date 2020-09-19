@@ -4,7 +4,7 @@ module.exports = {
   mode: 'production',
   entry: './src/index.ts',
   output: {
-    path: path.resolve(__dirname, 'dist'),
+    path: path.resolve(__dirname, 'lib/umd'),
     filename: 'particlesystems.js',
     library: 'particleSystems',
     libraryTarget: 'umd'

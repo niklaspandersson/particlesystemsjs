@@ -1,0 +1,6 @@
+.*
+node_modules
+*.map
+tsconfig.json
+webpack-config.json
+src
