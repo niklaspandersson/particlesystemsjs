@@ -6,10 +6,7 @@
   "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "build-demo": "webpack --config demo.webpack.config.js",
-    "build": "tsc && webpack",
-    "start": "webpack-dev-server --config demo.webpack.config.js"
+    "build": "tsc && webpack"
   },
   "keywords": [
     "particlesystem",
@@ -20,7 +17,7 @@
     "effects",
     "canvas"
   ],
-  "author": "Niklas Andersson",
+  "author": "Niklas P Andersson",
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^2.0.2",
