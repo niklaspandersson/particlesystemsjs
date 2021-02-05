@@ -2,8 +2,8 @@ import Particle from "./particle";
 import {gaussian, Vec2d, NumRange, Vec2 } from "./math";
 import { random } from "./math/random";
 
-type NumberFactory = () => number;
-type Vec2dFactory = () => Vec2d<number>;
+type NumberFactory = (age?:number) => number;
+type Vec2dFactory = (age?:number) => Vec2d<number>;
 
 function CreateVec2dFactory(param:Vec2d<number|NumRange>|Vec2dFactory) {
   if(typeof param === "function")
@@ -35,10 +35,10 @@ export type ParticleEmitterOptions<T> = {
   strategy: "random" | "periodic" | "sequence";
   lifetime?: number;
   particles: { 
-    initialPos: Vec2d<number|NumRange>|(() => Vec2d<number>); 
-    initialVelocity: Vec2d<number|NumRange>|(() => Vec2d<number>);
+    initialPos: Vec2d<number|NumRange>|((age?:number) => Vec2d<number>); 
+    initialVelocity: Vec2d<number|NumRange>|((age?:number) => Vec2d<number>);
     lifetime: number|NumRange|NumberFactory;
-    customDataFactory?:(p:Particle<T>)=>T;
+    customDataFactory?:(p:Particle<T>, age?:number)=>T;
   }
 }
 
@@ -46,7 +46,7 @@ export class ParticleEmitter<T> {
   private _initialPositionFactory: Vec2dFactory;
   private _initlalVelocityFactory: Vec2dFactory;
   private _particleLifetimeFactory: NumberFactory;
-  private _customDataFactory:((p:Particle<T>)=>T)|undefined;
+  private _customDataFactory:((p:Particle<T>, age?:number)=>T)|undefined;
   private counter:(dt:number) => number;
   private _age:number;
   private _lifetime:number;
@@ -64,18 +64,18 @@ export class ParticleEmitter<T> {
   }
 
   init(initialCount:number) {
-    return Array(initialCount).fill(null).map(_ => this.createParticle());
+    return Array(initialCount).fill(null).map(_ => this.createParticle(0));
   }
   onUpdate(dt:number) {
     this._age += dt;
     const cnt = this.counter(dt);
-    return cnt ? Array(cnt).fill(null).map(_ => this.createParticle()) : null;
+    return cnt ? Array(cnt).fill(null).map(_ => this.createParticle(this._age)) : null;
   }
 
-  private createParticle() {
-    const result = new Particle<T>(new Vec2(this._initialPositionFactory()), new Vec2(this._initlalVelocityFactory()), this._particleLifetimeFactory());
+  private createParticle(psAge:number) {
+    const result = new Particle<T>(new Vec2(this._initialPositionFactory(psAge)), new Vec2(this._initlalVelocityFactory(psAge)), this._particleLifetimeFactory(psAge));
     if(this._customDataFactory)
-      result.data = this._customDataFactory(result);
+      result.data = this._customDataFactory(result, psAge);
 
     return result;
   }

@@ -6,6 +6,7 @@ type Vec2Dictionary = { [key:string]: Vec2d<number> };
 
 export type ParticleSystemOptions<T> = {
   initialCount: number;
+  initialAge?: () => number;
   position: Vec2d<number>;
   forces?:  Vec2Dictionary;
   emitter: ParticleEmitterOptions<T>;
@@ -25,7 +26,7 @@ const DefaultPSOptions:ParticleSystemOptions<never> = {
   }
 }
 
-export class ParticleSystem<T>
+export class ParticleSystem<T = any>
 {
   private _emitter:ParticleEmitter<T>;
 
@@ -53,6 +54,9 @@ export class ParticleSystem<T>
 
     this._emitter = new ParticleEmitter<T>(opts.emitter);
     this._particles = this._emitter.init(opts.initialCount);
+    if(!!opts.initialAge) {
+      this._particles.forEach(p => p.updateAge(opts.initialAge()*p.lifetime));
+    }
 
     this.onAnimationFrame = this.onAnimationFrame.bind(this);
   }
