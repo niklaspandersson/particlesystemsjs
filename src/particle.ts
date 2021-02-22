@@ -1,7 +1,7 @@
-import {Vec2, Vec2d } from "./math";
-import Entity from "./entity";
+import { Vec2 } from "./math";
+import Entity2d from "./entity";
 
-export class Particle<T> extends Entity
+export class Particle<T> extends Entity2d
 {
   private _lifetime:number;
   public get lifetime() { return this._lifetime; }

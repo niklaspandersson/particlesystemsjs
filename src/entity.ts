@@ -1,13 +1,18 @@
 import { Vec2 } from "./math";
+import { Vec3 } from "./math";
 
-export class Entity {
-  public position:Vec2;
-  public velocity:Vec2;
+class Entity<T>
+{
+  public position:T;
+  public velocity:T;
 
-  constructor(pos:Vec2, velocity:Vec2) {
+  constructor(pos:T, velocity:T) {
     this.position = pos;
     this.velocity = velocity;
   }
 }
 
-export default Entity;
+export class Entity2d extends Entity<Vec2> {};
+export class Entity3d extends Entity<Vec3> {};
+
+export default Entity2d;

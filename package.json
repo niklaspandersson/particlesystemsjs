@@ -2,7 +2,7 @@
   "name": "particlesystem",
   "version": "0.0.1",
   "description": "Physics based particle system library for typescript / javascript",
-  "main": "./lib/umd/index.js",
+  "main": "./lib/umd/particlesystems.js",
   "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
@@ -10,7 +10,7 @@
   },
   "keywords": [
     "particlesystem",
-    "particle",
+    "particles",
     "physics",
     "graphics",
     "gfx",
