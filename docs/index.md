@@ -5,7 +5,7 @@
 |---|---|---|
 |initialCount|`0`|The number of particles when the system starts|
 |initialAge|*optional*|Function that gets called for each initial particle to give it an initial age other than 0. This funciton should return a normalized age between 0 and 1. The actual age is automatically calculated using this value and the particles lifetime.
-|position|`{x: 0, y: 0}`|The position of the particle system. Can be used to move the particlesystem over time.|
+|position|`{ x: 0, y: 0, z: 0 }`|The position of the particle system. Can be used to move the particlesystem over time.|
 |forces|*optional*|A dictionary of forces that affect the velocities of particles in the particlesystem.|
 |emitter| N/A | See emitter options below |
 
@@ -22,7 +22,7 @@
 ### Particles options
 | Name | Default | Remarks |
 |---|---|---|
-initialPosition
+|initialPosition|`{x: 0, y: 0, z: 0 }`|the initial position of spawned particles.
 initialVelocity
 lifetime
 customDataFactory
