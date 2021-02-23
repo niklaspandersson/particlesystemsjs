@@ -1,37 +1,29 @@
-## Welcome to GitHub Pages
+## Configuration
 
-You can use the [editor on GitHub](https://github.com/niklaspandersson/particlesystemsjs/edit/main/docs/index.md) to maintain and preview the content for your website in Markdown files.
+### Particlesystem options
+| Name | Default | Remarks |
+|---|---|---|
+|initialCount|`0`|The number of particles when the system starts|
+|initialAge|*optional*|Function that gets called for each initial particle to give it an initial age other than 0. This funciton should return a normalized age between 0 and 1. The actual age is automatically calculated using this value and the particles lifetime.
+|position|`{x: 0, y: 0}`|The position of the particle system. Can be used to move the particlesystem over time.|
+|forces|*optional*|A dictionary of forces that affect the velocities of particles in the particlesystem.|
+|emitter| N/A | See emitter options below |
 
-Whenever you commit to this repository, GitHub Pages will run [Jekyll](https://jekyllrb.com/) to rebuild the pages in your site, from the content in your Markdown files.
 
-### Markdown
+### Particle emitter options
+| Name | Default | Remarks |
+|---|---|---|
+|lifetime|*optional*|If provided, defines for how many seconds the emitter will keep emitting particles. If omitted, particles will be emitted indefinitely.|
+|particles| N/A | See particles options below |
+|particlesPerSecond|`40`|How many particles to spawn per second. Used by the `"random"` and the `"periodic"` spawning strategies (See below).|
+|sequence|*optional*|An array of numbers, defining the timing of each particle when using the `"sequence"` spawning strategy (see below).|
+|strategy|`"random"`|Which spawning strategy to use. Possible values are: `"random"`, `"periodic"` and `"sequence"`.|
 
-Markdown is a lightweight and easy-to-use syntax for styling your writing. It includes conventions for
-
-```markdown
-Syntax highlighted code block
-
-# Header 1
-## Header 2
-### Header 3
-
-- Bulleted
-- List
-
-1. Numbered
-2. List
-
-**Bold** and _Italic_ and `Code` text
-
-[Link](url) and ![Image](src)
-```
-
-For more details see [GitHub Flavored Markdown](https://guides.github.com/features/mastering-markdown/).
-
-### Jekyll Themes
-
-Your Pages site will use the layout and styles from the Jekyll theme you have selected in your [repository settings](https://github.com/niklaspandersson/particlesystemsjs/settings). The name of this theme is saved in the Jekyll `_config.yml` configuration file.
-
-### Support or Contact
-
-Having trouble with Pages? Check out our [documentation](https://docs.github.com/categories/github-pages-basics/) or [contact support](https://support.github.com/contact) and we’ll help you sort it out.
+### Particles options
+| Name | Default | Remarks |
+|---|---|---|
+initialPosition
+initialVelocity
+lifetime
+customDataFactory
+### The draw callback
