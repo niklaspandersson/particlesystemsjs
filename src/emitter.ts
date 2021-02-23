@@ -1,18 +1,19 @@
 import Particle from "./particle";
-import {gaussian, Vec2d, NumRange, Vec2 } from "./math";
+import {gaussian, Vec3, NumRange, Vector3, Vec3Optional } from "./math";
 import { random } from "./math/random";
 
 type NumberFactory = (age?:number) => number;
-type Vec2dFactory = (age?:number) => Vec2d<number>;
+type Vec3Factory = (age?:number) => Vec3<number>;
 
-function CreateVec2dFactory(param:Vec2d<number|NumRange>|Vec2dFactory) {
+function CreateVec3Factory(param:Vec3Optional<number|NumRange>|Vec3Factory) {
   if(typeof param === "function")
     return param;
 
   const xFactory = CreateNumberFactory(param.x);
   const yFactory = CreateNumberFactory(param.y);
+  const zFactory = CreateNumberFactory(param?.z || 0);
 
-  return () => ({ x: xFactory(), y: yFactory() });
+  return () => ({ x: xFactory(), y: yFactory(), z: zFactory() });
 };
 
 function CreateNumberFactory(param:number|NumRange|NumberFactory) {
@@ -23,7 +24,7 @@ function CreateNumberFactory(param:number|NumRange|NumberFactory) {
     return function() { return obj as number; }
   }
   else if(obj.hasOwnProperty("min") && obj.hasOwnProperty("max")) {
-    return function() { return random(param as NumRange); }
+    return function() { return random(obj as NumRange); }
   }
   
   throw new Error("Invalid parameter");
@@ -35,16 +36,16 @@ export type ParticleEmitterOptions<T> = {
   strategy: "random" | "periodic" | "sequence";
   lifetime?: number;
   particles: { 
-    initialPos: Vec2d<number|NumRange>|((age?:number) => Vec2d<number>); 
-    initialVelocity: Vec2d<number|NumRange>|((age?:number) => Vec2d<number>);
+    initialPos: Vec3Optional<number|NumRange>|((age?:number) => Vec3<number>); 
+    initialVelocity: Vec3Optional<number|NumRange>|((age?:number) => Vec3<number>);
     lifetime: number|NumRange|NumberFactory;
     customDataFactory?:(p:Particle<T>, age?:number)=>T;
   }
 }
 
 export class ParticleEmitter<T> {
-  private _initialPositionFactory: Vec2dFactory;
-  private _initlalVelocityFactory: Vec2dFactory;
+  private _initialPositionFactory: Vec3Factory;
+  private _initlalVelocityFactory: Vec3Factory;
   private _particleLifetimeFactory: NumberFactory;
   private _customDataFactory:((p:Particle<T>, age?:number)=>T)|undefined;
   private counter:(dt:number) => number;
@@ -55,8 +56,8 @@ export class ParticleEmitter<T> {
   constructor(opts:ParticleEmitterOptions<T>) {
     this._age = 0;
     this._lifetime = opts.lifetime || Infinity;
-    this._initialPositionFactory = CreateVec2dFactory(opts.particles.initialPos);
-    this._initlalVelocityFactory = CreateVec2dFactory(opts.particles.initialVelocity);
+    this._initialPositionFactory = CreateVec3Factory(opts.particles.initialPos);
+    this._initlalVelocityFactory = CreateVec3Factory(opts.particles.initialVelocity);
     this._particleLifetimeFactory = CreateNumberFactory(opts.particles.lifetime);
     this._customDataFactory = opts.particles.customDataFactory;
 
@@ -73,7 +74,7 @@ export class ParticleEmitter<T> {
   }
 
   private createParticle(psAge:number) {
-    const result = new Particle<T>(new Vec2(this._initialPositionFactory(psAge)), new Vec2(this._initlalVelocityFactory(psAge)), this._particleLifetimeFactory(psAge));
+    const result = new Particle<T>(new Vector3(this._initialPositionFactory(psAge)), new Vector3(this._initlalVelocityFactory(psAge)), this._particleLifetimeFactory(psAge));
     if(this._customDataFactory)
       result.data = this._customDataFactory(result, psAge);
 

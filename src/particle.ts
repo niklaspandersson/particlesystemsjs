@@ -1,7 +1,7 @@
-import { Vec2 } from "./math";
-import Entity2d from "./entity";
+import { Vector3 } from "./math";
+import Entity3d from "./entity";
 
-export class Particle<T> extends Entity2d
+export class Particle<T> extends Entity3d
 {
   private _lifetime:number;
   public get lifetime() { return this._lifetime; }
@@ -9,7 +9,7 @@ export class Particle<T> extends Entity2d
   public normalizedAge:number;
   public data:T|undefined;
 
-  constructor(pos:Vec2, velocity:Vec2, lifetime:number) {
+  constructor(pos:Vector3, velocity:Vector3, lifetime:number) {
     super(pos, velocity);
     this._lifetime = lifetime;
     this.age = this.normalizedAge = 0;

@@ -1,14 +1,14 @@
-import { Vec2d, Vec2 } from "./math";
+import { Vector3, Vec3, Vec3Optional } from "./math";
 import Particle from "./particle";
 import {ParticleEmitter, ParticleEmitterOptions } from "./emitter";
 import merge from "deepmerge";
-type Vec2Dictionary = { [key:string]: Vec2d<number> };
+type Vec3Dictionary = { [key:string]: Vec3<number> };
 
 export type ParticleSystemOptions<T> = {
   initialCount: number;
   initialAge?: () => number;
-  position: Vec2d<number>;
-  forces?:  Vec2Dictionary;
+  position: Vec3Optional<number>;
+  forces?:  Vec3Dictionary;
   emitter: ParticleEmitterOptions<T>;
 }
 
@@ -33,13 +33,13 @@ export class ParticleSystem<T = any>
   private _particles:Particle<T>[];
   public get particles() { return this._particles; }
 
-  private _pos:Vec2d<number>;
+  private _pos:Vec3<number>;
   public get position() { return this._pos; }
 
   private draw: (ps:ParticleSystem<T>, dt:number) => void;
   private update: (dt:number)=>void;
 
-  private _forces:Vec2Dictionary|undefined;
+  private _forces:Vec3Dictionary|undefined;
   private _dampening:number;
 
   constructor(options:Partial<ParticleSystemOptions<T>>, drawCallback:(ps:ParticleSystem<T>, dt:number)=>void) {
@@ -48,7 +48,7 @@ export class ParticleSystem<T = any>
 
     this._forces = opts.forces;
     this.update = (!!this._forces) ? this.updatePhysics.bind(this) : this.updateStatic.bind(this);
-    this._pos = opts.position;
+    this._pos = { z: 0, ...opts.position };
     this._dampening = 1;
     this.draw = drawCallback;
 
@@ -97,7 +97,7 @@ export class ParticleSystem<T = any>
   }
 
   private updatePhysics(deltaTime:number) {
-    let forces = new Vec2();
+    let forces = new Vector3();
     for(const f in this._forces)
       forces.add(this._forces[f]);
 
@@ -115,7 +115,7 @@ function upStatic<T>(this:{deltaTime:number}, p:Particle<T>) {
   return p.updateAge(this.deltaTime);
 }
 
-function upPhysics<T>(this:{forces:Vec2, dampening:number, deltaTime:number}, p:Particle<T>) {
+function upPhysics<T>(this:{forces:Vector3, dampening:number, deltaTime:number}, p:Particle<T>) {
   p.velocity.addScaled(this.forces, this.deltaTime);
   p.velocity.scale(this.dampening);
   p.position.addScaled(p.velocity, this.deltaTime);

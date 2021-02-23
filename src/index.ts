@@ -1,13 +1,13 @@
 export { Particle } from "./particle";
 export { ParticleSystem } from "./particlesystem";
-export { NumRange, Vec2d } from "./math";
+export { NumRange, Vec3, Vec3Optional } from "./math";
 
-import {normalize2d, magnitude2d } from "./math";
+import {normalize, magnitude } from "./math";
 import { random, randomize } from "./math/random";
 
 export const MathUtils = {
-  magnitude2d,
-  normalize2d,
+  magnitude,
+  normalize,
   random,
   randomize
 }

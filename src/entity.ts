@@ -1,5 +1,4 @@
-import { Vec2 } from "./math";
-import { Vec3 } from "./math";
+import { Vector3 } from "./math";
 
 class Entity<T>
 {
@@ -12,7 +11,6 @@ class Entity<T>
   }
 }
 
-export class Entity2d extends Entity<Vec2> {};
-export class Entity3d extends Entity<Vec3> {};
+export class Entity3d extends Entity<Vector3> {};
 
-export default Entity2d;
+export default Entity3d;
