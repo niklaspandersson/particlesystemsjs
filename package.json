@@ -1,7 +1,7 @@
 {
   "name": "particlesystems",
   "version": "1.0.0",
-  "description": "Physics based particle system library for typescript / javascript",
+  "description": "Simple, unopinionated particle system library for javascript / typescript",
   "main": "./lib/umd/particlesystems.js",
   "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
@@ -17,7 +17,12 @@
     "effects",
     "canvas"
   ],
-  "author": "Niklas P Andersson",
+  "author": "Niklas P Andersson (https://niklaspandersson.se)",
+  "homepage": "https://github.com/niklaspandersson/particlesystemsjs#readme",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/niklaspandersson/particlesystemsjs"
+  },
   "license": "ISC",
   "devDependencies": {
     "nodemon": "^2.0.2",

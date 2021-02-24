@@ -1,6 +1,5 @@
-.*
-node_modules
 *.map
 tsconfig.json
-webpack-config.json
+webpack.config.js
 src
+docs
