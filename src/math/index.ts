@@ -24,10 +24,10 @@ export class Vector3 implements Vec3<number>
   public x: number;
   public y: number;
   public z: number;
-  constructor({x = 0, y = 0, z = 0} = {}) {
-    this.x = x;
-    this.y = y;
-    this.z = z;
+  constructor(value:Vec3Optional<number> = {x: 0, y: 0, z: 0}) {
+    this.x = value.x;
+    this.y = value.y;
+    this.z = value?.z || 0;
   }
 
   public add(rhs:Vec3Optional<number>) {
