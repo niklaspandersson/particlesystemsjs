@@ -5,7 +5,7 @@ Configure you particlesystem by providing options for how your system, emitter a
 
 **Basic example**
 ```javascript
-function draw(ps, _timedelta) {
+function draw(ps) {
   const ctx = document.querySelector("canvas").getContext("2d");
   for(const p of ps.particles) {
     ctx.globalAlpha = 1 - p.normalizedAge;
@@ -35,14 +35,14 @@ const pos3 = { y: 30, z: 20 }   //invalid - both x and y are mandatory.
 ```
 ### Creating randomness
 A particlesystem where all particles start at the exact same place, fly of in the exact same direction with the same speed and live for the exact same duration won't be that interesting. That's why when you define a vector there are some more options to just providing constants.
-1. **The `NumRange`-object**. Instead of a constant for x, y, and z you can provide objects with a `min` and a `max` property. If you do this, each time a new vector is created based on your definition, a random number from within the range is assigned to the relevant property.
+1. **The `NumRange`-object**. Instead of constants for x, y, and z you can provide objects with a `min` and a `max` property. If you do this, each time a new vector is created based on your definition, a random number from within the range is assigned to the relevant property.
 2. **The factory function**. For complete control, instead of providing a vector object, provide a function returning a vector object. Then this function will be invoked everytime a new vector is needed. These factory functions receive what information is available about the new particle. For instance, a factory function for a particle's initial position receives the age of the emitter, but a function for a particle's initial velocity receives the age of the emitter AND the particles position.
 
 **Example: simple factory function**
 ```javascript
 function createOnCircle() {
   const Radius = 10;
-  const angle = Math.random()*Math.PI2*2;
+  const angle = Math.random()*Math.PI*2;
   return { x: cos(angle)*Radius, y: Math.sin(angle)*Radius }
 }
 
@@ -63,7 +63,7 @@ pd.start();
 ```javascript
 function createCircleFactory(radius) {
   return function() {
-    const angle = Math.random()*Math.PI2*2;
+    const angle = Math.random()*Math.PI*2;
     return { x: cos(angle)*radius, y: Math.sin(angle)*radius }
   }
 }
@@ -85,6 +85,14 @@ Sometimes you need to keep track of more parameters than the position and veloci
 
 **Example: custom data for opacity and scale**
 ```javascript
+function draw(ps) {
+  const ctx = document.querySelector("canvas").getContext("2d");
+  for(const p of ps.particles) {
+    ctx.globalAlpha = p.data.opacity;
+    ctx.fillRect(p.position.x, p.position.y, 5*p.data.scale, 5*p.data.scale);
+  });
+}
+
 const ps = new ParticleSystem({ 
   emitter: {
     particlesPerSecond: 40,
@@ -98,7 +106,7 @@ const ps = new ParticleSystem({
       })
     }
   }
-}, draw); //assumes a draw function is defined
+}, draw);
 ps.start();
 ```
 
