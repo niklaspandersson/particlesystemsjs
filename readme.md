@@ -4,7 +4,7 @@ Particlesystems.js is a unopinionated, slim library for creating particle effect
 - [Dust in the air](https://codepen.io/niklaspandersson/pen/GRNyxbz)
 - [Snow](https://codepen.io/niklaspandersson/pen/BaQJMbY)
 - [Confetti cannon](https://codepen.io/niklaspandersson/pen/yLVpwQY)
-- 
+  
 ## Usage
 Configure you particlesystem by providing options for how your system, emitter and particles should behave. Provid a callback that does the actual drawing using your favorite drawing api. Congratulations, you're done!
 
