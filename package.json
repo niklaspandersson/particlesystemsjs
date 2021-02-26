@@ -1,6 +1,6 @@
 {
   "name": "particlesystems",
-  "version": "1.0.2",
+  "version": "1.0.4",
   "description": "Simple, unopinionated particle system library for javascript / typescript",
   "main": "./lib/umd/particlesystems.js",
   "module": "./lib/index.js",

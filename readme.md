@@ -190,5 +190,20 @@ ps.start();
 |lifetime|`3`|The lifetime of a single particle. Can be a constant, a range, or a factory function. When provding a range a new lifetime value is randomized for each new particle. If a function is provided, that function is evaluated for each new particle and the return value is used as the particles lifetime.
 |customDataFactory| *optional*|A function returning some unique custom data you want associated with each particle.|
 
+### MathUtils
+A small collection of useful math functions
+| Name | Signature | Remark |
+| --- | --- | --- |
+| magnitude | `magnitude(value: {x: number, y: number, z: number}):number` | Returns the magnitude provided vector |
+| normalize | `normalize(value: {x: number, y: number, z: number}):{x: number, y: number, z: number}` | Returns a normalized vector pointing i the same direction as the provided vector. |
+| random | `random(range:{min:number, max: number}):number` | returns a random number in the specified range |
+| randomize | `randomize<T>(values:T[]):T` | returns a random object from the provided array |
+#### **MathUtils.Factories**
+Helper functions to create vector factories
+| Name | Signature | Remark |
+| --- | --- | --- |
+| circle | `circle(r: number, inside?:boolean):() => {x: number, y: number, z: number}` | Returns a factory that creates vectors either on the perimiter of a circle with radius `r` or inside that same circle, depending on the `inside` argument |
+| inDirectionOf | `inDirectionOf(vec: {x: number, y: number, z?: number}, spread:number = 0, magFactorLimit = 1):() => {x: number, y: number, z: number}` | Returns a function that creates vectors pointing in the general direction of `vec`. The created vectors  falls withing the angle `spread`, centered around `vec`. The created vectors have a magnitude between the magnitude of `vec` and `magFactorLimit` times that original magnitude. |
+
 ## Support or Contact
 Having trouble? Create an issue in the github repository at [Issues](https://github.com/niklaspandersson/particlesystemsjs/issues).
