@@ -2,6 +2,8 @@ import Particle from "./particle";
 import {gaussian, Vec3, NumRange, Vector3, Vec3Optional } from "./math";
 import { random } from "./math/random";
 
+const DefaultParticlesPerSecond = 10;
+
 type NumberFactory = (age?:number, pos?:Vec3<number>, vel?:Vec3<number>) => number;
 type Vec3Factory = (age?:number, pos?:Vec3<number>, vel?:Vec3<number>) => Vec3Optional<number>;
 
@@ -31,9 +33,9 @@ function CreateNumberFactory(param:number|NumRange|NumberFactory) {
 }
 
 export type ParticleEmitterOptions<T> = {
-  particlesPerSecond: number;
+  particlesPerSecond?: number;
   sequence?: number[];
-  strategy: "random" | "periodic" | "sequence";
+  strategy?: "random" | "periodic" | "sequence";
   lifetime?: number;
   particles: { 
     initialPos: Vec3Optional<number|NumRange>|Vec3Factory; 
@@ -51,7 +53,8 @@ export class ParticleEmitter<T> {
   private counter:(dt:number) => number;
   private _age:number;
   private _lifetime:number;
-  public get isAlive() { return this._age < this._lifetime; }
+  private _stopped:boolean = false;
+  public get isAlive() { return !this._stopped && this._age < this._lifetime; }
 
   constructor(opts:ParticleEmitterOptions<T>) {
     this._age = 0;
@@ -61,7 +64,11 @@ export class ParticleEmitter<T> {
     this._particleLifetimeFactory = CreateNumberFactory(opts.particles.lifetime);
     this._customDataFactory = opts.particles.customDataFactory;
 
-    this.counter = CreateCounter(opts.strategy, opts);
+    this.counter = CreateCounter(opts.strategy || "random", opts);
+  }
+
+  stop() {
+    this._stopped = true;
   }
 
   init(initialCount:number) {
@@ -88,11 +95,11 @@ export class ParticleEmitter<T> {
 function CreateCounter<T>(strategy:string, opts:ParticleEmitterOptions<T>) {
   switch(strategy.toLowerCase()) {
     case "random":
-      return createRandomCounter(opts.particlesPerSecond);
+      return createRandomCounter(opts.particlesPerSecond || DefaultParticlesPerSecond);
     case "sequence":
       return createSequenceCounter(opts.sequence);
     case "periodic":
-      return createPeriodicCounter(opts.particlesPerSecond);
+      return createPeriodicCounter(opts.particlesPerSecond || DefaultParticlesPerSecond);
     default:
       throw new Error(`unsupported emitter strategy: '${strategy}'`)
   }

@@ -4,6 +4,8 @@ Particlesystems.js is a unopinionated, slim library for creating particle effect
 - [Dust in the air](https://codepen.io/niklaspandersson/pen/GRNyxbz)
 - [Snow](https://codepen.io/niklaspandersson/pen/BaQJMbY)
 - [Confetti cannon](https://codepen.io/niklaspandersson/pen/yLVpwQY)
+- [Ray gun](https://codepen.io/niklaspandersson/pen/BaQYBZR)
+- [Spawning on DOM elements](https://codepen.io/niklaspandersson/pen/NWbzvzJ)
   
 ## Usage
 Configure you particlesystem by providing options for how your system, emitter and particles should behave. Provid a callback that does the actual drawing using your favorite drawing api. Congratulations, you're done!
@@ -137,6 +139,42 @@ const ps = new ParticleSystem({
 ps.start();
 ```
 
+### Spawn on DOM element
+There are a lot of use cases for spawning particle systems tied to certain DOM elements. As feedback to user interaction, a nicer hover effect or maybe to just provide some ambient background animation to a certain section of a document. 
+
+In order to make these tasks easier, a helper function - [`SpawnOnDOMElement`](#utility-functions) - is provided. It takes care of all things related to dynamically creating and positioning canvases in response to events, and of course, creating, starting and stopping the spawned particle systems.
+
+**Example: particle system as hover effect**
+```javascript
+function draw(canvas, ps) {
+  const ctx = canvas.getContext("2d");
+  const Radius = 15;
+  ctx.fillStyle = 'yellow';
+  for(const p of ps.particles) {
+    let a = 1 - p.normalizedAge;
+    ctx.globalAlpha = -a*a*(a-1)*3; //a nice smooth animation of the alpha that starts and stops at 0 and peaks at about .4
+    ctx.beginPath();
+    ctx.ellipse(p.position.x, p.position.y, Radius, Radius, 0, 0, 2*Math.PI);
+    ctx.fill();
+  });
+}
+
+SpawnOnDOMElement({  //the SpawnOnDOMElements options
+  event: "mouseenter", 
+  elements: document.getElementById("btn-test")!,
+  stopEvent: "mouseleave")
+}, {  //the particlesystem options. Note: no need to provide information about spawned particles position. That's taken care of by SpawnOnDOMElement and made sure to match the provided DOM element
+  initialCount: 2,
+  emitter: {
+    particlesPerSecond: 1.2,
+    particles: {
+      initialVelocity: MathUtils.Factories.inDirectionOf({x: 8, y: 8}, Math.PI*2, .6),
+      lifetime: { min: 2, max: 3 },
+    }
+  }
+}, draw);
+```
+
 ## API Reference
 
 ### The ParticleSystem class
@@ -146,10 +184,18 @@ ps.start();
 |`constructor(options, drawCallback)`|Creates and initiates the particle system based on the provided [options](#particlesystem-options-object). The draw callback gets invoked with a reference to the particlesystem object and a time delta specifying how much time has elapsed since the last draw call (in seconds). |
 |`start()`|Starts the particle system|
 |`stop()`|Stops the particle system|
+|`addEventListener(type, handler, options)`| adds a handler to a specific event|
+|`on(type, handler, options)`| alias for `addEventListener`|
+|`removeEventListener(type, handler, options)`| removes a handler for a specific event|
+|`off(type, handler, options)`| alias for `removeEventListener`|
 #### **Properties**
 | Name | Remark |
 | --- | --- |
 |`particles`|Array of all active particles. Particles are automatically removed from this array when their age exceeds their lifetime.|
+#### ** Events **
+| Name | Remark |
+| --- | --- |
+|`stop`|This event is dispatched when a particle system is stopped. Either explicitly by calling the stop method, or implicitly when the emitter and all particles have died.
 
 ### The Particle objects
 
@@ -205,5 +251,20 @@ Helper functions to create vector factories
 | circle | `circle(r: number, inside?:boolean):() => {x: number, y: number, z: number}` | Returns a factory that creates vectors either on the perimiter of a circle with radius `r` or inside that same circle, depending on the `inside` argument |
 | inDirectionOf | `inDirectionOf(vec: {x: number, y: number, z?: number}, spread:number = 0, magFactorLimit = 1):() => {x: number, y: number, z: number}` | Returns a function that creates vectors pointing in the general direction of `vec`. The created vectors  falls withing the angle `spread`, centered around `vec`. The created vectors have a magnitude between the magnitude of `vec` and `magFactorLimit` times that original magnitude. |
 
+### utility functions
+| Name | Signature | Remark |
+| --- | --- | --- |
+| SpawnOnDOMElement | `SpawnOnDOMElement(options, particlesystemOptions, draw)` | Registers event handlers on the provided element(s) that spawn a particle system on (or inside of) the target element. *Note:* The draw function takes an extra argument that gets passed the dynamically created canvas element.|
+
+#### **SpawnOnDOMElement options object**
+| Property | Default | Remarks |
+|---|---|---|
+|event| - |The DOM event that should trigger the start of a particle system.|
+|elements|-| a css query selector `string`, `HTMLElement`, `NodeList` or `HTMLCollection` that identify the relevant element(s).|
+|stopEvent|*optional*| Which event, if any, that should trigger a stop of the particle system.|
+|inside|`false`|A boolean indicating whether to position the particle system inside the element or outside / on top of it.|
+|inset|*optional*|Allows you to specify the number of pixels to inset the area of the emitter from the elements boundries.|
+|maxDistance| `200` |The number of pixels *outside* of the element that particles can travel before getting clipped. Only applicable when the `inside` property is `false`. |
+|canvasClassname|*optional*|A classname to assign to all canvases created as a result of a spawned particle system.|
 ## Support or Contact
 Having trouble? Create an issue in the github repository at [Issues](https://github.com/niklaspandersson/particlesystemsjs/issues).

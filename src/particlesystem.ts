@@ -28,7 +28,10 @@ const DefaultPSOptions:ParticleSystemOptions<never> = {
 
 export class ParticleSystem<T = any>
 {
+  private _eventTarget = new EventTarget();
+  
   private _emitter:ParticleEmitter<T>;
+  public get emitter() { return this._emitter; }
 
   private _particles:Particle<T>[];
   public get particles() { return this._particles; }
@@ -76,6 +79,7 @@ export class ParticleSystem<T = any>
     if(this.animationFrameId) 
       window.cancelAnimationFrame(this.animationFrameId);
     this.animationFrameId = null;
+    this._eventTarget.dispatchEvent(new Event("stop"));
   }
 
   private onAnimationFrame(time:DOMHighResTimeStamp) {
@@ -107,6 +111,24 @@ export class ParticleSystem<T = any>
   private updateStatic(deltaTime:number) {
     const ctx = { deltaTime };
     this._particles = this._particles.filter(upStatic, ctx);
+  }
+
+  //event target helpers
+  addEventListener(type:string, listener:EventListener|EventListenerObject|null, options?:AddEventListenerOptions|boolean) {
+    this._eventTarget.addEventListener(type, listener, options);
+  }
+  on(type:string, listener:EventListener|EventListenerObject|null) {
+    this._eventTarget.addEventListener(type, listener);
+  }
+  once(type:string, listener:EventListener|EventListenerObject|null) {
+    this._eventTarget.addEventListener(type, listener, { once: true });
+  }
+
+  removeEventListener(type:string, listener:EventListener|EventListenerObject|null, options?:AddEventListenerOptions|boolean) {
+    this._eventTarget.removeEventListener(type, listener, options);
+  }
+  off(type:string, listener:EventListener|EventListenerObject|null) {
+    this._eventTarget.removeEventListener(type, listener);
   }
 }
 
