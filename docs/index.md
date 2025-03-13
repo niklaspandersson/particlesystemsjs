@@ -1,3 +1,6 @@
+---
+title: Particlesystems
+---
 Particlesystems.js is a unopinionated, slim library for creating particle effects. It helps you by taking care of all the tedious bits of particle effects, leaving you with more time to focus on what makes your effects special, the drawing.
 
 ## Usage
@@ -43,7 +46,7 @@ A particlesystem where all particles start at the exact same place, fly of in th
 function createOnCircle() {
   const Radius = 10;
   const angle = Math.random()*Math.PI*2;
-  return { x: cos(angle)*Radius, y: Math.sin(angle)*Radius }
+  return { x: Math.cos(angle)*Radius, y: Math.sin(angle)*Radius }
 }
 
 const ps = new ParticleSystem({ 
@@ -64,7 +67,7 @@ pd.start();
 function createCircleFactory(radius) {
   return function() {
     const angle = Math.random()*Math.PI*2;
-    return { x: cos(angle)*radius, y: Math.sin(angle)*radius }
+    return { x: Math.cos(angle)*radius, y: Math.sin(angle)*radius }
   }
 }
 

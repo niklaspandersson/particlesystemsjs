@@ -42,14 +42,14 @@ export class ParticleSystem<T = any>
   private draw: (ps:ParticleSystem<T>, dt:number) => void;
   private update: (dt:number)=>void;
 
-  private _forces:Vec3Dictionary|undefined;
+  private _forces:Vec3<number>[]|undefined;
   private _dampening:number;
 
   constructor(options:Partial<ParticleSystemOptions<T>>, drawCallback:(ps:ParticleSystem<T>, dt:number)=>void) {
 
     const opts = merge(DefaultPSOptions, options);
 
-    this._forces = opts.forces;
+    this._forces = opts.forces ? Object.values(opts.forces) : undefined;
     this.update = (!!this._forces) ? this.updatePhysics.bind(this) : this.updateStatic.bind(this);
     this._pos = { z: 0, ...opts.position };
     this._dampening = 1;
@@ -101,16 +101,14 @@ export class ParticleSystem<T = any>
   }
 
   private updatePhysics(deltaTime:number) {
-    let forces = new Vector3();
-    for(const f in this._forces)
-      forces.add(this._forces[f]);
+    let forces = this._forces?.reduce<Vector3>((sum, f) => sum.add(f), new Vector3());
 
     const ctx = { forces, dampening: this._dampening, deltaTime };
-    this._particles = this._particles.filter(upPhysics, ctx);
+    this._particles = this._particles.filter(updatePhysics, ctx);
   }
   private updateStatic(deltaTime:number) {
     const ctx = { deltaTime };
-    this._particles = this._particles.filter(upStatic, ctx);
+    this._particles = this._particles.filter(updateStatic, ctx);
   }
 
   //event target helpers
@@ -132,12 +130,12 @@ export class ParticleSystem<T = any>
   }
 }
 
-function upStatic<T>(this:{deltaTime:number}, p:Particle<T>) {
+function updateStatic<T>(this:{deltaTime:number}, p:Particle<T>) {
   p.position.addScaled(p.velocity, this.deltaTime);
   return p.updateAge(this.deltaTime);
 }
 
-function upPhysics<T>(this:{forces:Vector3, dampening:number, deltaTime:number}, p:Particle<T>) {
+function updatePhysics<T>(this:{forces:Vector3, dampening:number, deltaTime:number}, p:Particle<T>) {
   p.velocity.addScaled(this.forces, this.deltaTime);
   p.velocity.scale(this.dampening);
   p.position.addScaled(p.velocity, this.deltaTime);
