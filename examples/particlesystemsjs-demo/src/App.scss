@@ -1,0 +1,53 @@
+.app {
+  display: grid;
+  grid-template-areas: 
+    "header header" 
+    "navigation scene";
+
+  grid-template-rows: auto 1fr;
+  grid-template-columns: auto 1fr;
+  height: 100vh;
+}
+
+
+.header {
+  background-color: rgb(39, 39, 43);
+  grid-area: header;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+#navigation {
+  grid-area: navigation;
+
+  ul {
+    display: flex;
+    flex-flow: column nowrap;
+  }
+}
+
+#scene {
+  width: 100%;
+  grid-area: scene;
+  height: 100%;
+  background-color: black;
+}
+
+
+@media (orientation: portrait) {
+  .app {
+    display: grid;
+    grid-template-areas: 
+      "header" 
+      "navigation"
+      "scene";
+  
+    grid-template-rows: auto auto 1fr;
+    grid-template-columns: 1fr;
+    height: 100vh;
+  }
+
+  #navigation ul {
+    flex-flow: row;
+  }
+}
