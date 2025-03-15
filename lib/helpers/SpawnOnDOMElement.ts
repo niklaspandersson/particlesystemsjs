@@ -28,32 +28,46 @@ export type SpawnedPSOptions<T> = Omit<Partial<ParticleSystemOptions<T>>, "posit
 }
 
 export function SpawnOnDOMElement<T>(options: SpawnOnDOMElementOptions, psOptions: SpawnedPSOptions<T>, drawHandler: (context: HTMLCanvasElement, ps: ParticleSystem<T>, dt?: number) => void) {
+  let elements = [] as HTMLElement[];
   if (typeof options.elements === "string")
-    Array.from(document.querySelectorAll<HTMLElement>(options.elements)).forEach(el => setupElement(el, options, psOptions, drawHandler))
+    elements = Array.from(document.querySelectorAll<HTMLElement>(options.elements));
   else if (options.elements instanceof HTMLElement)
-    setupElement(options.elements, options, psOptions, drawHandler);
+    elements = [options.elements]
   else if (options.elements instanceof NodeList || options.elements instanceof HTMLCollection)
-    Array.from(options.elements).filter(el => el instanceof HTMLElement).forEach((el) => setupElement(el as HTMLElement, options, psOptions, drawHandler))
+    elements = Array.from(options.elements).filter(el => el instanceof HTMLElement) as HTMLElement[]
+
+  const cleanup = elements.map(el => setupElement(el, options, psOptions, drawHandler))
+  return () => {
+    console.log("Cleaning up dom elements")
+    cleanup.forEach(f => f())
+  }
 }
 
 function setupElement<T>(element: HTMLElement, options: SpawnOnDOMElementOptions, psOptions: SpawnedPSOptions<T>, drawHandler: (context: HTMLCanvasElement, ps: ParticleSystem<T>, dt?: number) => void) {
   const inside = options.inside || false;
 
+  // TODO: need to keep track of multiple instances of these
+  let stopEventHandler: (() => void) | undefined;
+  let scrollOrResizeHandler: (() => void) | undefined;
+  let lastCanvas: HTMLCanvasElement | undefined;
+
+
   function eventHandler(_: Event) {
     const targetRect = element.getBoundingClientRect();
     const bounds = (inside) ? createInsideCanvasBounds(targetRect, options.inset || 0) : createAbsoluteCanvasBounds(targetRect, options.maxDistance, options.inset);
-    let canvas: HTMLCanvasElement = createCanvas(bounds, options.canvasClassname);
+    let canvas = createCanvas(bounds, options.canvasClassname);
+    lastCanvas = canvas
 
     const opts = createParticleSystemOptions(psOptions, targetRect, bounds);
-    const ps = new ParticleSystem<T>(opts, (ps, dt) => drawHandler(canvas, ps, dt));
+    const ps = new ParticleSystem<T>(opts, (ps, dt) => drawHandler(canvas!, ps, dt));
 
-    const scrollOrResizeHandler = () => {
+    scrollOrResizeHandler = () => {
       ps?.stop();
     }
     window.addEventListener("resize", scrollOrResizeHandler, { once: true });
 
     //function that gets called when the optional stop-event occurs
-    const stopEventHandler = () => {
+    stopEventHandler = () => {
       ps.emitter.stop();
 
       //TODO: might want to add support for fading out effect faster than 
@@ -70,14 +84,12 @@ function setupElement<T>(element: HTMLElement, options: SpawnOnDOMElementOptions
 
     // remove the canvas from the document once the ParticleSystem dies
     ps.once("stop", () => {
-      canvas.remove();
+      canvas?.remove();
       if (options.stopEvent)
-        element.removeEventListener(options.stopEvent, stopEventHandler);
+        element.removeEventListener(options.stopEvent, stopEventHandler!);
 
-      window.removeEventListener("resize", scrollOrResizeHandler);
+      window.removeEventListener("resize", scrollOrResizeHandler!);
     });
-
-
 
     //add the canvas to the document
     if (inside) {
@@ -93,7 +105,16 @@ function setupElement<T>(element: HTMLElement, options: SpawnOnDOMElementOptions
   }
 
   element.addEventListener(options.event, eventHandler);
-  return eventHandler;
+  return () => {
+    element.removeEventListener(options.event, eventHandler);
+    lastCanvas?.remove();
+
+    if (options.stopEvent && stopEventHandler)
+      element.removeEventListener(options.stopEvent, stopEventHandler);
+
+    if (scrollOrResizeHandler)
+      window.removeEventListener("resize", scrollOrResizeHandler);
+  };
 }
 
 type Bounds = {

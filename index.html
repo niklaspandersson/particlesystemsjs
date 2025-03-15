@@ -3,11 +3,25 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Particlesystems.js + Vite</title>
+  <title>Particlesystems.js</title>
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
-  <button id="btn-start">Fire!</button>
-  <canvas id="canvas"></canvas>
+  <header>
+    <h1>Test page for Particlesystems</h1>
+  </header>
+  <main>
+    <nav>
+      <ul>
+        <li><button data-scene="confetti">Confetti</button></li>
+        <li><button data-scene="snow">Snow</button></li>
+        <li><button data-scene="bubbles">Bubbles</button></li>
+        <li><button data-scene="dom-hearts">Spawn on DOM</button></li>
+      </ul>
+    </nav>
+    <div id="scene-container"></div>
+  </main>
+  <canvas id="overlay"></canvas>
   <script type="module" src="/examples/index.ts"></script>
 </body>
 </html>

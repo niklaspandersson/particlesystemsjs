@@ -25,8 +25,5 @@
   "include": [
     "lib",
     "examples"
-  ],
-  "exclude": [
-    "examples/*"
   ]
 }
