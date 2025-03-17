@@ -165,9 +165,10 @@ export default function init({ canvas }: { canvas: HTMLCanvasElement }) {
     gl.bindVertexArray(null);
   }
 
+  let confetti: ParticleSystem<any>[] = [];
   // Start the particle system.
   function start() {
-    const confetti = Array(1)
+    confetti = Array(1)
       .fill(0)
       .map((_, i) => new ParticleSystem({
         initialCount: 400,
@@ -195,5 +196,35 @@ export default function init({ canvas }: { canvas: HTMLCanvasElement }) {
     confetti.forEach(ps => ps.start());
   }
 
+  function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+    gl?.viewport(0, 0, canvas.width, canvas.height);
+    projectionMatrix.set([
+      2 / canvas.width, 0, 0, 0,
+      0, -2 / canvas.height, 0, 0,
+      0, 0, 1, 0,
+      -1, 1, 0, 1,
+    ]);
+  }
+
+  window.addEventListener('resize', resizeCanvas);
+  resizeCanvas(); // Initial resize
+
   start();
+
+  return () => {
+    window.removeEventListener('resize', resizeCanvas);
+    confetti?.forEach(ps => ps.stop());
+
+    gl?.clear(gl.COLOR_BUFFER_BIT);
+    gl?.deleteProgram(program);
+    gl?.deleteShader(vs);
+    gl?.deleteShader(fs);
+    gl?.deleteBuffer(quadBuffer);
+    gl?.deleteBuffer(offsetBuffer);
+    gl?.deleteBuffer(rotationBuffer);
+    gl?.deleteBuffer(colorBuffer);
+    gl?.deleteVertexArray(vao);
+  }
 }
