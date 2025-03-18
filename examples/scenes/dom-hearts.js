@@ -1,4 +1,5 @@
 import { MathUtils, SpawnOnDOMElement } from "../../lib/main.ts";
+import { createHeart } from "../utils/textures";
 
 const html = `<h1>Test page for Particlesystems</h1>
   <p>Lorem ipsum dolor sit, <button id="btnTEST" class="test">Give some love</button> amet consectetur adipisicing elit. Id dolore, culpa repellat nulla rerum accusamus dolorum non magnam sapiente minus autem cupiditate placeat vitae expedita, porro architecto <button id="btnTEST" class="test">Give some love</button> eveniet!  Ipsa, esse.</p>
@@ -21,7 +22,7 @@ const html = `<h1>Test page for Particlesystems</h1>
   <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Id dolore, culpa repellat nulla rerum accusamus dolorum non magnam <button class="test">Give some love</button> sapiente minus autem cupiditate placeat vitae expedita, porro architecto eveniet! Ipsa, esse.</p>
   <p>Lorem ipsum dolor sit, amet consectetur adipisicing elit. Id dolore, culpa repellat nulla rerum accusamus dolorum non magnam sapiente minus autem cupiditate placeat vitae expedita, porro architecto eveniet! Ipsa, esse.</p>`;
 
-const heart = createHeartSprite();
+const heart = createHeart();
 
 function draw(canvas, ps) {
   const context = canvas.getContext("2d");
@@ -102,9 +103,3 @@ export default function init({ container }) {
   }
 }
 
-
-function createHeartSprite() {
-  const img = new Image();
-  img.src = `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAABb2lDQ1BpY2MAACiRdZE7SwNBFIU/EyWiEQstRCxSqFgoRAWxlAimUYskglGb3TUPIdksuwkSbAUbi4CFaOOr8B9oK9gqCIIiiNj4B3w1EtY7JpAgySyz9+PMnMvMGfDMZ4ys0xqErJm3I+FQYDm+EvC94cWDn3F6NcOxFqJzMZqO7wdaVL0fU72a72s4OtcTjgEt7cJThmXnhWeE5zfzluJd4V4jra0LHwuP2nJA4Rul6xV+VZyq8KdiOxaZBY/qGUjVsV7HRtrOCo8ID2YzBaN6HnUTf8JcikrtlzmAQ4QwIQLoFNggQ54xqaZk1tgX/PMtkhOPIX+LIrY4UqTFOypqQbompCZFT8iXoahy/5+nk5ycqHT3h6DtxXU/hsC3B+WS6/6cuG75FLzPcGXW/DnJafpL9FJNGzyC7m24uK5p+j5c7kDfk6XZ2p/klelJJuH9HLri0HMHHauVrKrrnD1CbEue6BYODmFY9nev/QLg5Wf8eVdnGAAAAAlwSFlzAAALEgAACxIB0t1+/AAAAzRJREFUWEftlktIVFEYx79zx0dQlm5aCS2CsJlFmyjNFI02YRAIgqty1a5dT4tWQS4j27WIWolUUKQEFY4FKkqLwBEqgoJWLaKX2DjOPf2+8c5wne48rs7kpjNchnse///vfN855x6R/2WTI2CK+T9tbTENTs12V6SWjkuHp+YXy+F9dSjWlLZ2wBHzYsXa+SMzC0gEl0CAibZYS40xJ63Ybmul2YrU0fGnMfJOxDxadt2RozML3/2Sz1ujDXWO009dr7U2yn8TzxJjPhoxzwC52z2deJ+PsQYg3hbl3ZyNGDNYa0wjsxBFB0C0Y0Rb+emseM4gGFdBgDsAHubZB7SkGeAyFnMhCkK9pKz9it41ScuNrtmESmZKHkDser3jXExZF4HCwa51jLb/QLBXewH8gKodqSKDaCePRpKuHeqaTlz6CyDeFuuDdFRnXcQ7R4UpM7XfPIBMtEqV1ShmItgHxP1cBDDfysssAFEaS+nk2nVWWopFK19Mo0A6Fqg/AMSi43XoDGueNQ5jrmMw1zWhi7RD37MA7bpQ/lXxvNr9AHvdsjJfGUTPq8UP8DtvQ1TGqaBKJtpJP0Aim4sqO2fkPa+EHyC+bN2Cx2WloTyvST/AHKt5qi67ryrt6NNTD/Wiai4HwH5M8XKFIzRZTQbVVg+8LnueuW0oVExyCJ3n7LbV2JCqqdp4nMPrZTYoa9YeH5ebdLiq+7SSEKqlmqqNx7A/w4E+HM1D5OrCcthjrsDa0byjteYjFBiB3Hgrgwy4xZdxw8tRNVRL8x4kVjDSRKGGAbcRGEiuc4eqOWPvoHOavK+EAtDOXDS2EIN73HT6wkKsztwd5XA5Rd45aYNLybUGxDYgRoDoKRfCMx/DvB/zX8XyWBLAi0QjEA+B6C4F4ZlPYN6LeebCsmEAD2JnROQx17GDXKsCNetZ7VzLZtIiJzD/Uspc28uKQFZoojXWHHHkiV4+87eobjX2+RtOuuOYfy7HPDSAF4nd3I7HudvtyV5CPfO3mPdg/qFc83UBeBAxAMZIyS59J+SfuJSqeeYTG6aESoFfmN2xn1SMax2hP4b56zDGFekLRKc+FRHbLJE/0kpdebzc6NUAAAAASUVORK5CYII=`;
-  return img;
-}
