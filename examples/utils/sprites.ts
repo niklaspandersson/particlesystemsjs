@@ -5,30 +5,47 @@ const SPACING_Y = 42;
 
 const SIZE = 62;
 
-const STRIDE_X = (SPACING_X+SIZE);
-const STRIDE_Y = (SPACING_Y+SIZE);
+const STRIDE_X = (SPACING_X + SIZE);
+const STRIDE_Y = (SPACING_Y + SIZE);
 
 const Locations = {
-  "Disc": [1,0],
-  "Square": [2,0],
-  "Bar": [3,0],
-  "Star": [0,1],
-  "Circle": [1,1],
-  "Ring": [2,1],
-  "Sphere": [3,1],
-  "Flare": [0,2],
-  "Spark": [1,2],
-  "Explosion": [2,2],
-  "Cloud": [3,2],
-  "Smoke": [1,3],
-  "Snow": [2,3]
+  "Disc": [1, 0],
+  "Square": [2, 0],
+  "Bar": [3, 0],
+  "Star": [0, 1],
+  "Circle": [1, 1],
+  "Ring": [2, 1],
+  "Sphere": [3, 1],
+  "Flare": [0, 2],
+  "Spark": [1, 2],
+  "Explosion": [2, 2],
+  "Cloud": [3, 2],
+  "Smoke": [1, 3],
+  "Snow": [2, 3]
 }
 
 type SpriteTypes = keyof (typeof Locations);
 
-export class Sprites 
-{
-  private _image:HTMLImageElement;
+export class Sprites {
+  private _image: HTMLImageElement;
+  public get image(): HTMLImageElement { return this._image; }
+
+  public get locations() {
+    return Locations;
+  }
+
+  public getUVs(type: SpriteTypes) {
+    const [x, y] = Locations[type];
+    const x1 = PADDING_LEFT + (x * STRIDE_X);
+    const y1 = PADDING_TOP + (y * STRIDE_Y);
+    const x2 = x1 + SIZE;
+    const y2 = y1 + SIZE;
+
+    return {
+      u: [x1 / this._image.width, x2 / this._image.width],
+      v: [y1 / this._image.height, y2 / this._image.height]
+    }
+  }
 
   constructor() {
     this._image = new Image();
@@ -37,11 +54,11 @@ export class Sprites
 
   public get size() { return SIZE; }
 
-  drawSprite(cxt: CanvasRenderingContext2D, type:SpriteTypes, dx:number = 0, dy:number = 0, scale:number = 1) {
+  drawSprite(cxt: CanvasRenderingContext2D, type: SpriteTypes, dx: number = 0, dy: number = 0, scale: number = 1) {
     const [x, y] = Locations[type];
-    const destSize = SIZE*scale;
-    const sx = PADDING_LEFT+x*STRIDE_X;
-    const sy = PADDING_TOP+y*STRIDE_Y;
-    cxt.drawImage(this._image, sx, sy, SIZE, SIZE, dx-destSize/2, dy-destSize/2, destSize, destSize);
+    const destSize = SIZE * scale;
+    const sx = PADDING_LEFT + x * STRIDE_X;
+    const sy = PADDING_TOP + y * STRIDE_Y;
+    cxt.drawImage(this._image, sx, sy, SIZE, SIZE, dx - destSize / 2, dy - destSize / 2, destSize, destSize);
   }
 }

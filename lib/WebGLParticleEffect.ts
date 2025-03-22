@@ -1,19 +1,6 @@
 import { ParticleSystem } from "./particlesystem";
 import type { ParticleSystemOptions } from "./particlesystem";
-
-const DefaultFragmentShaderSource = `#version 300 es
-    precision mediump float;
-    in vec4 vertexColor;
-    out vec4 outColor;
-    void main() {
-      outColor = vertexColor;
-    }
-  `;
-
-export type WebGLParticleEffectOptions<T> = ParticleSystemOptions<T> & {
-  vertexShaderSource: string;
-  fragmentShaderSource?: string;
-};
+import { buildShaderSource } from "./webgl/vertexshaderbuilder";
 
 function createShader(gl: WebGL2RenderingContext, type: number, source: string) {
   const shader = gl.createShader(type)!;
@@ -48,32 +35,90 @@ function createGLSLProgram(gl: WebGL2RenderingContext, vs: string, fs: string) {
   return program;
 }
 
+type AttribSizes = Record<string, {
+  name: string;
+  size: number;
+  loc: number;
+  offset: number;
+}>
+
 export default class WebGLParticleEffect<T = any> {
   private gl: WebGL2RenderingContext;
   private program: WebGLProgram;
   private vao: WebGLVertexArrayObject;
-  private offsetBuffer: WebGLBuffer;
-  private rotationBuffer: WebGLBuffer;
-  private colorBuffer: WebGLBuffer;
-  private u_projectionLoc: WebGLUniformLocation;
+  #particleDataBuffer: WebGLBuffer;
   private projectionMatrix: Float32Array;
   private particleSystem: ParticleSystem<T>;
+  private attribs: AttribSizes;
 
-  constructor(canvas: HTMLCanvasElement, options: WebGLParticleEffectOptions<T>) {
+  constructor(canvas: HTMLCanvasElement, options: ParticleSystemOptions<T>) {
     const gl = canvas.getContext("webgl2", { alpha: true });
     if (!gl) throw new Error("WebGL2 not supported");
 
     this.gl = gl;
 
-    const { vertexShaderSource, fragmentShaderSource, ...psOpts } = options;
+    this.particleSystem = new ParticleSystem<T>(options, this.draw);
 
-    this.program = createGLSLProgram(gl, vertexShaderSource, fragmentShaderSource ?? DefaultFragmentShaderSource);
+    // create the shader program
+    const { vs, fs } = buildShaderSource(this.particleSystem.options);
+    this.program = createGLSLProgram(gl, vs, fs);
 
+    //setup projection matrix
+    this.projectionMatrix = new Float32Array(16);
+    this.updateProjectionMatrix();
+
+    // Initialize the data
     this.vao = gl.createVertexArray()!;
     gl.bindVertexArray(this.vao);
+    this.#setupVertexDataBuffer();
 
-    this.projectionMatrix = new Float32Array(16);
+    this.#particleDataBuffer = gl.createBuffer()!;
+    this.attribs = this.#setupParticleDataBuffer();
+    console.log(this.attribs);
 
+    gl.bindVertexArray(null);
+  }
+
+  #setupParticleDataBuffer() {
+    const gl = this.gl;
+
+    let attribs = ([
+      ["particleTranslation", 2],
+      ["particleRotation", 1],
+      ["particleAge", 1],
+      ["particleScale", 2],
+      ["particleColor", 4],
+    ] as [string, number][])
+      .map(([name, size]) => {
+        // Get the location of the attribute in the shader program
+        const loc = gl.getAttribLocation(this.program, name);
+        return { name, size, loc, offset: 0 };
+      })
+      .filter(({ loc }) => {
+        // filter out attributes that are not used in the shader program
+        return loc !== -1;
+      })
+
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.#particleDataBuffer);
+    let dataStride = attribs.reduce((acc, { size }) => acc + size, 0) * Float32Array.BYTES_PER_ELEMENT
+
+    let offset = 0;
+    attribs.forEach((attr) => {
+      attr.offset = offset;
+      gl.enableVertexAttribArray(attr.loc);
+      gl.vertexAttribPointer(attr.loc, attr.size, gl.FLOAT, false, dataStride, offset * Float32Array.BYTES_PER_ELEMENT);
+      gl.vertexAttribDivisor(attr.loc, 1);
+      offset += attr.size;
+    });
+
+    return attribs.reduce((acc, obj) => {
+      acc[obj.name] = obj;
+      return acc;
+    }, {} as AttribSizes);
+  }
+
+  #setupVertexDataBuffer() {
+    const gl = this.gl;
     const vertexData = new Float32Array([
       -1, -1, 0, 0,
       1, -1, 1, 0,
@@ -90,40 +135,11 @@ export default class WebGLParticleEffect<T = any> {
     gl.enableVertexAttribArray(positionLoc);
     gl.vertexAttribPointer(positionLoc, 2, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT, 0);
 
-    const texCoordLoc = gl.getAttribLocation(this.program, "textureCoord");
+    const texCoordLoc = gl.getAttribLocation(this.program, "vertexUV");
     if (texCoordLoc !== -1) {
       gl.enableVertexAttribArray(texCoordLoc);
       gl.vertexAttribPointer(texCoordLoc, 2, gl.FLOAT, false, 4 * Float32Array.BYTES_PER_ELEMENT, 2 * Float32Array.BYTES_PER_ELEMENT);
     }
-
-    this.offsetBuffer = gl.createBuffer()!;
-    this.rotationBuffer = gl.createBuffer()!;
-    this.colorBuffer = gl.createBuffer()!;
-
-    const a_offsetLoc = gl.getAttribLocation(this.program, "a_offset");
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
-    gl.enableVertexAttribArray(a_offsetLoc);
-    gl.vertexAttribPointer(a_offsetLoc, 2, gl.FLOAT, false, 0, 0);
-    gl.vertexAttribDivisor(a_offsetLoc, 1);
-
-    const a_rotationLoc = gl.getAttribLocation(this.program, "a_rotation");
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.rotationBuffer);
-    gl.enableVertexAttribArray(a_rotationLoc);
-    gl.vertexAttribPointer(a_rotationLoc, 1, gl.FLOAT, false, 0, 0);
-    gl.vertexAttribDivisor(a_rotationLoc, 1);
-
-    const a_colorLoc = gl.getAttribLocation(this.program, "a_color");
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-    gl.enableVertexAttribArray(a_colorLoc);
-    gl.vertexAttribPointer(a_colorLoc, 4, gl.FLOAT, false, 0, 0);
-    gl.vertexAttribDivisor(a_colorLoc, 1);
-
-    gl.bindVertexArray(null);
-
-    this.updateProjectionMatrix();
-    this.u_projectionLoc = gl.getUniformLocation(this.program, "u_projection")!;
-
-    this.particleSystem = new ParticleSystem<T>(psOpts, this.draw);
   }
 
   public start() {
@@ -134,33 +150,41 @@ export default class WebGLParticleEffect<T = any> {
     const gl = this.gl;
     gl.useProgram(this.program);
     gl.bindVertexArray(this.vao);
-    gl.uniformMatrix4fv(this.u_projectionLoc, false, this.projectionMatrix);
+    gl.uniformMatrix4fv(gl.getUniformLocation(this.program, "projection"), false, this.projectionMatrix);
+    gl.uniform2fv(gl.getUniformLocation(this.program, "globalTranslation"), [ps.position.x, ps.position.y]);
+
+    const attrs = Array.from(Object.values(this.attribs).values())
+    const dataStride = attrs.reduce((acc, { size }) => acc + size, 0);
 
     const count = ps.particles.length;
-    const offsets = new Float32Array(count * 2);
-    const rotations = new Float32Array(count);
-    const colors = new Float32Array(count * 4);
+    const particleData = new Float32Array(count * dataStride);
 
     for (let i = 0; i < count; i++) {
       const p = ps.particles[i];
-      offsets[i * 2] = p.position.x;
-      offsets[i * 2 + 1] = p.position.y;
-      rotations[i] = p.data.initialRotation + p.data.rotationSpeed * p.normalizedAge * 6.28318;
-      if (p?.data?.color && Array.isArray(p.data.color)) {
-        const alpha = 1.0 - p.normalizedAge;
-        colors.set([...p.data.color.slice(0, 3), alpha], i * 4);
-      } else {
-        colors.set([1, 1, 1, 1], i * 4);
+      particleData[i * dataStride + 0] = p.position.x;
+      particleData[i * dataStride + 1] = p.position.y;
+      particleData[i * dataStride + 2] = p.initialRotation + p.rotationSpeed * p.normalizedAge * 6.28318;
+
+      if (this.attribs.particleScale) {
+        const offset = this.attribs.particleScale.offset;
+        particleData[i * dataStride + offset] = p.scale.x;
+        particleData[i * dataStride + offset + 1] = p.scale.y;
+      }
+      if (this.attribs.particleAge) {
+        const offset = this.attribs.particleAge.offset;
+        particleData[i * dataStride + offset] = p.normalizedAge;
+      }
+      if (this.attribs.particleColor) {
+        const offset = this.attribs.particleColor.offset;
+        particleData[i * dataStride + offset] = p.color.r;
+        particleData[i * dataStride + offset + 1] = p.color.g;
+        particleData[i * dataStride + offset + 2] = p.color.b;
+        particleData[i * dataStride + offset + 3] = p.color.a;
       }
     }
 
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.rotationBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, rotations, gl.DYNAMIC_DRAW); // Ensure rotation buffer is updated
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.offsetBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, offsets, gl.DYNAMIC_DRAW);
-    gl.bindBuffer(gl.ARRAY_BUFFER, this.colorBuffer);
-    gl.bufferData(gl.ARRAY_BUFFER, colors, gl.DYNAMIC_DRAW);
-
+    gl.bindBuffer(gl.ARRAY_BUFFER, this.#particleDataBuffer);
+    gl.bufferData(gl.ARRAY_BUFFER, particleData, gl.DYNAMIC_DRAW);
     gl.drawArraysInstanced(gl.TRIANGLES, 0, 6, count);
     gl.bindVertexArray(null);
   }
@@ -175,6 +199,8 @@ export default class WebGLParticleEffect<T = any> {
   }
 
   public resize(width: number, height: number) {
+    this.gl.canvas.width = width;
+    this.gl.canvas.height = height;
     this.gl.viewport(0, 0, width, height);
     this.updateProjectionMatrix();
   }
