@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>WebGPU Particle System Demo</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    body {
+      background: #1a1a2e;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color: #fff;
+    }
+    h1 {
+      margin-bottom: 20px;
+      font-weight: 300;
+    }
+    canvas {
+      border: 1px solid #333;
+      background: #000;
+    }
+    .controls {
+      margin-top: 20px;
+      display: flex;
+      gap: 10px;
+    }
+    button {
+      padding: 10px 20px;
+      background: #4a4a8a;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    button:hover {
+      background: #5a5a9a;
+    }
+    .info {
+      margin-top: 15px;
+      color: #888;
+      font-size: 14px;
+    }
+    .error {
+      color: #ff6b6b;
+      padding: 20px;
+      background: rgba(255, 107, 107, 0.1);
+      border-radius: 5px;
+      max-width: 500px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+  <h1>WebGPU Particle System</h1>
+  <div id="container">
+    <canvas id="canvas" width="800" height="600"></canvas>
+  </div>
+  <div class="controls">
+    <button id="startBtn">Start</button>
+    <button id="stopBtn">Stop</button>
+    <button id="burstBtn">Burst!</button>
+  </div>
+  <div class="info" id="info">Initializing WebGPU...</div>
+
+  <script type="module">
+    // Note: This demo assumes the library is built and available
+    // In production, import from the built package
+    import { GPUParticleSystem, Particle } from '../lib/index.js';
+
+    const canvas = document.getElementById('canvas');
+    const info = document.getElementById('info');
+
+    // Check WebGPU support
+    if (!navigator.gpu) {
+      document.getElementById('container').innerHTML = `
+        <div class="error">
+          <h2>WebGPU Not Supported</h2>
+          <p>Your browser doesn't support WebGPU yet.</p>
+          <p>Try Chrome 113+, Edge 113+, or Firefox Nightly with WebGPU enabled.</p>
+        </div>
+      `;
+      throw new Error('WebGPU not supported');
+    }
+
+    // Create particle system with GPU rendering
+    const ps = new GPUParticleSystem({
+      initialCount: 100,
+      position: { x: canvas.width / 2, y: canvas.height / 2 },
+      forces: {
+        gravity: { x: 0, y: 50, z: 0 },
+      },
+      dampening: 0.99,
+      maxParticles: 50000,
+      emitter: {
+        particlesPerSecond: 200,
+        strategy: 'random',
+        particles: {
+          initialPos: {
+            x: { min: -5, max: 5 },
+            y: { min: -5, max: 5 },
+          },
+          initialVelocity: {
+            x: { min: -100, max: 100 },
+            y: { min: -200, max: -50 },
+          },
+          lifetime: { min: 2, max: 5 },
+          customDataFactory: (p) => ({
+            color: {
+              r: Math.random() * 0.5 + 0.5,
+              g: Math.random() * 0.3,
+              b: Math.random() * 0.8 + 0.2,
+              a: 1,
+            },
+            size: Math.random() * 8 + 4,
+          }),
+        },
+      },
+    });
+
+    // Initialize WebGPU
+    async function init() {
+      const success = await ps.initialize(canvas);
+      if (success) {
+        info.textContent = 'WebGPU initialized! Click Start to begin.';
+
+        document.getElementById('startBtn').addEventListener('click', () => {
+          ps.start();
+          info.textContent = 'Running...';
+        });
+
+        document.getElementById('stopBtn').addEventListener('click', () => {
+          ps.stop();
+          info.textContent = 'Stopped.';
+        });
+
+        document.getElementById('burstBtn').addEventListener('click', () => {
+          // Add a burst of particles
+          for (let i = 0; i < 500; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = Math.random() * 200 + 100;
+            const particle = new Particle(
+              { x: 0, y: 0, z: 0 },
+              {
+                x: Math.cos(angle) * speed,
+                y: Math.sin(angle) * speed - 100,
+                z: 0
+              },
+              Math.random() * 3 + 1
+            );
+            particle.data = {
+              color: {
+                r: 1,
+                g: Math.random() * 0.5 + 0.5,
+                b: Math.random() * 0.3,
+                a: 1,
+              },
+              size: Math.random() * 15 + 5,
+            };
+            ps.addParticle(particle);
+          }
+        });
+      } else {
+        info.textContent = 'Failed to initialize WebGPU.';
+      }
+    }
+
+    init();
+
+    // Update particle count display
+    setInterval(() => {
+      if (ps.initialized) {
+        const count = ps.particles.length;
+        info.textContent = `Particles: ${count}`;
+      }
+    }, 100);
+  </script>
+</body>
+</html>

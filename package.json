@@ -6,7 +6,7 @@
   "module": "./lib/index.js",
   "types": "./lib/index.d.ts",
   "scripts": {
-    "build": "tsc && webpack"
+    "build": "tsc && NODE_OPTIONS=--openssl-legacy-provider webpack"
   },
   "keywords": [
     "particlesystem",
@@ -15,7 +15,9 @@
     "graphics",
     "gfx",
     "effects",
-    "canvas"
+    "canvas",
+    "webgpu",
+    "compute-shader"
   ],
   "author": "Niklas P Andersson (https://niklaspandersson.se)",
   "homepage": "https://github.com/niklaspandersson/particlesystemsjs#readme",
@@ -25,6 +27,7 @@
   },
   "license": "ISC",
   "devDependencies": {
+    "@webgpu/types": "^0.1.69",
     "nodemon": "^2.0.2",
     "source-map-loader": "^0.2.4",
     "ts-loader": "^6.2.1",
